@@ -23,7 +23,8 @@ On the 1,500-customer test set (seed 2026, 14.1% churn):
 - **Stratified split.** The 70/30 split keeps the churn rate the same in both sets.
 - **Class weighting.** Inverse-frequency weights give churners the same total weight as non-churners. The model uses `quasibinomial` because binomial `glm` warns on non-integer weights. The coefficients are the same.
 - **Lasso with CV on training data only.** `cv.glmnet` picks the penalty with 10-fold cross-validation on the training set. The test set is not used for tuning.
-- **Metrics written from scratch.** AUC uses the rank (Mann-Whitney) formula, and the test suite checks it against hand-worked values. Lift is the top-group churn rate divided by the base rate.
+- **Metrics written from scratch.** AUC uses the rank (Mann-Whitney) formula and matches a brute-force pairwise count, ties included. Lift is the top-group churn rate divided by the base rate.
+- **Ties at the cut-off are shared.** When several customers have the same score at the edge of the top group, they share the remaining places equally. Breaking ties by row order would let a score with no information show a lift above 1 whenever the churners happen to sit first in the file. Lift and the gain table both use this rule.
 
 ## Quick start
 
@@ -46,7 +47,7 @@ Rscript -e 'testthat::test_dir("tests/testthat", stop_on_failure = TRUE)'
 | `outputs/logistic_odds_ratios.csv` | Odds ratios, 95% intervals and p-values |
 | `outputs/gain_table.csv` | Share of churners captured by contacting the top x% |
 
-Odds ratios for `balance` are per £1, so they read as 1.000. The odds ratio per £10,000 is the reported value raised to the power of 10,000.
+The balance odds ratio is reported per £10,000, since per £1 it rounds to 1.000.
 
 ## Limitations
 

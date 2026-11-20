@@ -54,20 +54,19 @@ coefficients <- data.frame(
   p_value = signif(summary(logit_fit)$coefficients[, 4], 3),
   row.names = NULL
 )
+# Balance is in pounds, so its per-£1 odds ratio rounds to 1.000. Report it per
+# £10,000 instead, scaling the unrounded coefficient and interval.
+is_balance <- coefficients$term == "balance"
+coefficients$term[is_balance] <- "balance (per £10,000)"
+coefficients$odds_ratio[is_balance] <- round(exp(10000 * stats::coef(logit_fit)[["balance"]]), 3)
+coefficients$ci_low[is_balance] <- round(exp(10000 * ci["balance", 1]), 3)
+coefficients$ci_high[is_balance] <- round(exp(10000 * ci["balance", 2]), 3)
 write.csv(coefficients, "outputs/logistic_odds_ratios.csv", row.names = FALSE)
 cat("\nOdds ratios (plain logistic model):\n")
 print(coefficients)
 
 # Gain table: share of churners captured when contacting the top x% of customers
 # ranked by the score from the plain logistic model.
-ranked_churn <- test$churned[order(scores[["Logistic regression"]], decreasing = TRUE)]
-pct <- seq(5, 100, by = 5)
-gain <- data.frame(
-  contacted_pct = pct,
-  churners_captured_pct = sapply(pct, function(p) {
-    k <- ceiling(p / 100 * length(ranked_churn))
-    round(100 * sum(ranked_churn[seq_len(k)]) / sum(ranked_churn), 1)
-  })
-)
+gain <- gain_table(test$churned, scores[["Logistic regression"]])
 write.csv(gain, "outputs/gain_table.csv", row.names = FALSE)
 print(gain)

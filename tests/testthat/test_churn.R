@@ -33,6 +33,25 @@ test_that("lift in the top 20% is computed from the ranking", {
   expect_equal(lift_at(actual, score, 0.2), 5) # top 20% (2 customers) are all churners
 })
 
+test_that("lift and gain ignore row order when scores are tied", {
+  # A score with no information must give lift 1, wherever the churners sit.
+  actual <- c(rep(1, 10), rep(0, 90))
+  flat <- rep(0.5, 100)
+  expect_equal(lift_at(actual, flat, 0.2), 1)
+  expect_equal(lift_at(rev(actual), flat, 0.2), 1)
+  expect_equal(gain_table(actual, flat, c(20, 50))$churners_captured_pct, c(20, 50))
+  # Partial tie at the cut-off: one clear churner on top, then 4 tied customers
+  # (1 churner) competing for 1 remaining place in the top 2.
+  actual <- c(1, 1, 0, 0, 0)
+  score <- c(0.9, 0.5, 0.5, 0.5, 0.5)
+  expect_equal(churners_in_top_k(actual, score, 2), 1 + 1 * (1 / 4))
+})
+
+test_that("gain table reaches 100% at full contact", {
+  actual <- c(1, 0, 1, 0, 0, 1)
+  expect_equal(tail(gain_table(actual, runif(6))$churners_captured_pct, 1), 100)
+})
+
 test_that("simulated data is reproducible and has a plausible churn rate", {
   a <- simulate_bank_customers(n = 2000, seed = 11)
   b <- simulate_bank_customers(n = 2000, seed = 11)
