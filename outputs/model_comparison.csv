@@ -1,0 +1,4 @@
+"model","auc","precision_at_0.5","recall_at_0.5","lift_top_20pct"
+"Logistic regression",0.761,0.486,0.085,2.32
+"Logistic (class-weighted)",0.76,0.258,0.673,2.32
+"Lasso logistic (CV)",0.762,0.5,0.057,2.35

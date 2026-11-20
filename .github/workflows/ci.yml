@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  r:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install R packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y r-base-core r-cran-glmnet r-cran-testthat
+      - name: Run tests
+        run: Rscript -e 'testthat::test_dir("tests/testthat", stop_on_failure = TRUE)'
+      - name: Run analysis
+        run: Rscript run_analysis.R
